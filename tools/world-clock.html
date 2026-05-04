@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>時區與匯率｜Kit</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="../lang.js"></script>
+  <style>
+    .wc-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 28px;
+      border: 1px solid #e8edf3;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+      margin-bottom: 20px;
+    }
+    .wc-card h3 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 20px;
+    }
+
+    /* City row */
+    .city-row {
+      display: grid;
+      grid-template-columns: 1fr 52px 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .city-select-wrap { display: flex; flex-direction: column; gap: 10px; }
+    .city-select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #e8edf3;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      color: #1a1a2e;
+      background: #fff;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .city-select:focus { border-color: #2da58e; }
+
+    .clock-big {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #1a1a2e;
+      font-variant-numeric: tabular-nums;
+    }
+    .clock-date {
+      font-size: 0.85rem;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .swap-mid {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding-top: 32px;
+    }
+    .swap-mid-btn {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: 1.5px solid #e8edf3;
+      background: #fff;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .swap-mid-btn:hover { background: #e8f5f0; border-color: #2da58e; }
+
+    .offset-badge {
+      background: #e8f5f0;
+      color: #2da58e;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    /* Time converter */
+    .time-conv-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+    .time-input-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .time-input-label { font-size: 0.78rem; color: #aaa; font-weight: 600; }
+    .time-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #e8edf3;
+      border-radius: 12px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      font-family: inherit;
+      color: #1a1a2e;
+      background: #f7f9fc;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .time-input:focus { border-color: #2da58e; background: #fff; }
+    .time-result {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      padding: 12px 14px;
+      background: #f7f9fc;
+      border-radius: 12px;
+      border: 1.5px solid #e8edf3;
+    }
+    .day-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      margin-left: 6px;
+    }
+    .day-plus  { background: #e8f5f0; color: #2da58e; }
+    .day-minus { background: #fff0f0; color: #e05c5c; }
+
+    .conv-arrow {
+      font-size: 1.2rem;
+      color: #ccc;
+      margin-top: 22px;
+    }
+
+    /* Exchange rate */
+    .rate-display {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+    .rate-line {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+    .rate-line span { color: #2da58e; }
+    .rate-loading { color: #aaa; font-size: 0.9rem; }
+    .rate-updated { font-size: 0.78rem; color: #bbb; margin-top: 8px; }
+
+    .amount-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-top: 16px;
+    }
+    .amount-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .amount-label { font-size: 0.78rem; color: #aaa; font-weight: 600; }
+    .amount-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #e8edf3;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      font-family: inherit;
+      color: #1a1a2e;
+      background: #f7f9fc;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .amount-input:focus { border-color: #2da58e; background: #fff; }
+    .same-currency {
+      text-align: center;
+      color: #aaa;
+      font-size: 0.9rem;
+      padding: 12px 0;
+    }
+
+    @media (max-width: 560px) {
+      .clock-big { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="../index.html" class="logo">⚙️ Kit</a>
+      <button id="lang-toggle" class="lang-toggle" onclick="toggleLang()">EN</button>
+    </div>
+  </nav>
+
+  <div class="tool-page-wrap" style="max-width:640px">
+    <a href="../index.html" class="back-link" data-zh="← 返回工具列表" data-en="← Back to Tools">← 返回工具列表</a>
+    <h1>🌏 <span data-zh="時區與匯率" data-en="Time Zone & Exchange Rate">時區與匯率</span></h1>
+
+    <!-- Time Zone Card -->
+    <div class="wc-card">
+      <h3 data-zh="時區對照" data-en="TIME ZONE">時區對照</h3>
+
+      <div class="city-row">
+        <div class="city-select-wrap">
+          <select class="city-select" id="cityA" onchange="onCityChange()"></select>
+          <div class="clock-big" id="clockA">--:--:--</div>
+          <div class="clock-date" id="dateA">--</div>
+        </div>
+
+        <div class="swap-mid">
+          <button class="swap-mid-btn" onclick="swapCities()" title="⇄">⇄</button>
+          <div class="offset-badge" id="offsetBadge">--</div>
+        </div>
+
+        <div class="city-select-wrap">
+          <select class="city-select" id="cityB" onchange="onCityChange()"></select>
+          <div class="clock-big" id="clockB">--:--:--</div>
+          <div class="clock-date" id="dateB">--</div>
+        </div>
+      </div>
+
+      <!-- Time converter -->
+      <div class="time-conv-row">
+        <div class="time-input-wrap">
+          <div class="time-input-label" id="labelTimeA">台北時間</div>
+          <input class="time-input" type="time" id="timeInputA" oninput="convertTime('A')">
+        </div>
+        <div class="conv-arrow">→</div>
+        <div class="time-input-wrap">
+          <div class="time-input-label" id="labelTimeB">鳳凰城時間</div>
+          <div class="time-result" id="timeResultB">--:--</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exchange Rate Card -->
+    <div class="wc-card">
+      <h3 data-zh="即時匯率" data-en="EXCHANGE RATE">即時匯率</h3>
+      <div id="rateSection">
+        <div class="rate-display" id="rateDisplay">
+          <div class="rate-loading" data-zh="載入中..." data-en="Loading...">載入中...</div>
+        </div>
+        <div class="amount-row">
+          <div class="amount-wrap">
+            <div class="amount-label" id="labelCurrA">TWD</div>
+            <input class="amount-input" id="amountA" type="number" value="1000" oninput="convertAmount('A')">
+          </div>
+          <div class="conv-arrow" style="margin-top:22px">⇄</div>
+          <div class="amount-wrap">
+            <div class="amount-label" id="labelCurrB">USD</div>
+            <input class="amount-input" id="amountB" type="number" oninput="convertAmount('B')">
+          </div>
+        </div>
+        <div class="rate-updated" id="rateUpdated"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const cities = [
+      { zh:'台北（台灣）',     en:'Taipei, Taiwan',          tz:'Asia/Taipei',          currency:'twd', symbol:'TWD', flag:'🇹🇼' },
+      { zh:'鳳凰城（亞利桑那）',en:'Phoenix, Arizona',         tz:'America/Phoenix',      currency:'usd', symbol:'USD', flag:'🇺🇸' },
+      { zh:'紐約',            en:'New York',                 tz:'America/New_York',     currency:'usd', symbol:'USD', flag:'🇺🇸' },
+      { zh:'洛杉磯',          en:'Los Angeles',              tz:'America/Los_Angeles',  currency:'usd', symbol:'USD', flag:'🇺🇸' },
+      { zh:'芝加哥',          en:'Chicago',                  tz:'America/Chicago',      currency:'usd', symbol:'USD', flag:'🇺🇸' },
+      { zh:'多倫多',          en:'Toronto',                  tz:'America/Toronto',      currency:'cad', symbol:'CAD', flag:'🇨🇦' },
+      { zh:'倫敦',            en:'London',                   tz:'Europe/London',        currency:'gbp', symbol:'GBP', flag:'🇬🇧' },
+      { zh:'巴黎',            en:'Paris',                    tz:'Europe/Paris',         currency:'eur', symbol:'EUR', flag:'🇫🇷' },
+      { zh:'杜拜',            en:'Dubai',                    tz:'Asia/Dubai',           currency:'aed', symbol:'AED', flag:'🇦🇪' },
+      { zh:'新加坡',          en:'Singapore',                tz:'Asia/Singapore',       currency:'sgd', symbol:'SGD', flag:'🇸🇬' },
+      { zh:'香港',            en:'Hong Kong',                tz:'Asia/Hong_Kong',       currency:'hkd', symbol:'HKD', flag:'🇭🇰' },
+      { zh:'上海',            en:'Shanghai',                 tz:'Asia/Shanghai',        currency:'cny', symbol:'CNY', flag:'🇨🇳' },
+      { zh:'東京',            en:'Tokyo',                    tz:'Asia/Tokyo',           currency:'jpy', symbol:'JPY', flag:'🇯🇵' },
+      { zh:'首爾',            en:'Seoul',                    tz:'Asia/Seoul',           currency:'krw', symbol:'KRW', flag:'🇰🇷' },
+      { zh:'雪梨',            en:'Sydney',                   tz:'Australia/Sydney',     currency:'aud', symbol:'AUD', flag:'🇦🇺' },
+    ];
+
+    let idxA = 0, idxB = 1;
+    let currentRate = null;
+    const rateCache = {};
+
+    /* ── build selects ── */
+    function buildSelects() {
+      const lang = getLang();
+      ['cityA','cityB'].forEach((id, side) => {
+        const sel = document.getElementById(id);
+        const cur = side === 0 ? idxA : idxB;
+        sel.innerHTML = cities.map((c, i) =>
+          `<option value="${i}" ${i===cur?'selected':''}>${c.flag} ${c[lang]}</option>`
+        ).join('');
+      });
+    }
+
+    function onCityChange() {
+      idxA = parseInt(document.getElementById('cityA').value);
+      idxB = parseInt(document.getElementById('cityB').value);
+      updateTimeLabels();
+      updateOffset();
+      convertTime('A');
+      fetchRate();
+    }
+
+    function swapCities() {
+      [idxA, idxB] = [idxB, idxA];
+      document.getElementById('cityA').value = idxA;
+      document.getElementById('cityB').value = idxB;
+      onCityChange();
+    }
+
+    /* ── live clock ── */
+    function formatTime(tz) {
+      return new Intl.DateTimeFormat('en-GB', {
+        timeZone: tz, hour:'2-digit', minute:'2-digit', second:'2-digit', hour12: false
+      }).format(new Date());
+    }
+
+    function formatDate(tz) {
+      const lang = getLang();
+      const locale = lang === 'en' ? 'en-US' : 'zh-TW';
+      return new Intl.DateTimeFormat(locale, {
+        timeZone: tz, weekday:'short', month:'short', day:'numeric'
+      }).format(new Date());
+    }
+
+    function tickClocks() {
+      document.getElementById('clockA').textContent = formatTime(cities[idxA].tz);
+      document.getElementById('clockB').textContent = formatTime(cities[idxB].tz);
+      document.getElementById('dateA').textContent  = formatDate(cities[idxA].tz);
+      document.getElementById('dateB').textContent  = formatDate(cities[idxB].tz);
+    }
+
+    /* ── offset badge ── */
+    function getTZOffsetMin(tz) {
+      const d = new Date();
+      const utc  = new Date(d.toLocaleString('en-US', {timeZone:'UTC'}));
+      const local = new Date(d.toLocaleString('en-US', {timeZone: tz}));
+      return Math.round((local - utc) / 60000);
+    }
+
+    function updateOffset() {
+      const offA = getTZOffsetMin(cities[idxA].tz);
+      const offB = getTZOffsetMin(cities[idxB].tz);
+      const diff = offA - offB; // A is diff minutes ahead of B
+      const absDiff = Math.abs(diff);
+      const h = Math.floor(absDiff / 60);
+      const m = absDiff % 60;
+      const timeStr = m > 0 ? `${h}h ${m}m` : `${h}h`;
+
+      const nameA = cities[idxA][getLang()].split('（')[0].split(',')[0];
+      const nameB = cities[idxB][getLang()].split('（')[0].split(',')[0];
+
+      let badge;
+      if (diff === 0) {
+        badge = t('相同時區', 'Same Time Zone');
+      } else if (diff > 0) {
+        badge = t(`${nameA} 早 ${timeStr}`, `${nameA} +${timeStr}`);
+      } else {
+        badge = t(`${nameA} 晚 ${timeStr}`, `${nameA} −${timeStr}`);
+      }
+      document.getElementById('offsetBadge').textContent = badge;
+    }
+
+    /* ── time labels ── */
+    function updateTimeLabels() {
+      const lang = getLang();
+      const nameA = cities[idxA][lang].split('（')[0].split(',')[0];
+      const nameB = cities[idxB][lang].split('（')[0].split(',')[0];
+      document.getElementById('labelTimeA').textContent = t(`${nameA} 時間`, `${nameA} Time`);
+      document.getElementById('labelTimeB').textContent = t(`${nameB} 時間`, `${nameB} Time`);
+    }
+
+    /* ── time converter ── */
+    function convertTime(from) {
+      const inputEl = document.getElementById('timeInputA');
+      const resultEl = document.getElementById('timeResultB');
+      const val = inputEl.value;
+      if (!val) { resultEl.innerHTML = '--:--'; return; }
+
+      const [hStr, mStr] = val.split(':');
+      const h = parseInt(hStr), m = parseInt(mStr);
+
+      const offA = getTZOffsetMin(cities[idxA].tz);
+      const offB = getTZOffsetMin(cities[idxB].tz);
+      const diff = offB - offA;
+
+      let totalMin = h * 60 + m + diff;
+      let dayOff = 0;
+      if (totalMin < 0)       { totalMin += 1440; dayOff = -1; }
+      if (totalMin >= 1440)   { totalMin -= 1440; dayOff = +1; }
+
+      const rh = Math.floor(totalMin / 60);
+      const rm = totalMin % 60;
+      const timeStr = `${String(rh).padStart(2,'0')}:${String(rm).padStart(2,'0')}`;
+
+      let dayTag = '';
+      if (dayOff === 1)  dayTag = `<span class="day-tag day-plus">${t('+1 天','+1 day')}</span>`;
+      if (dayOff === -1) dayTag = `<span class="day-tag day-minus">${t('-1 天','-1 day')}</span>`;
+      resultEl.innerHTML = timeStr + dayTag;
+    }
+
+    /* ── exchange rate ── */
+    async function fetchRate() {
+      const cA = cities[idxA].currency;
+      const cB = cities[idxB].currency;
+      const symA = cities[idxA].symbol;
+      const symB = cities[idxB].symbol;
+
+      document.getElementById('labelCurrA').textContent = symA;
+      document.getElementById('labelCurrB').textContent = symB;
+
+      if (cA === cB) {
+        document.getElementById('rateDisplay').innerHTML =
+          `<div class="same-currency">${t('兩地使用相同貨幣', 'Same currency in both cities')} (${symA})</div>`;
+        document.getElementById('amountA').disabled = true;
+        document.getElementById('amountB').disabled = true;
+        document.getElementById('rateUpdated').textContent = '';
+        currentRate = null;
+        return;
+      }
+
+      document.getElementById('amountA').disabled = false;
+      document.getElementById('amountB').disabled = false;
+      document.getElementById('rateDisplay').innerHTML =
+        `<div class="rate-loading">${t('載入中...','Loading...')}</div>`;
+
+      const key = `${cA}_${cB}`;
+      try {
+        let data;
+        if (rateCache[key]) {
+          data = rateCache[key];
+        } else {
+          const res = await fetch(
+            `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${cA}.json`
+          );
+          const json = await res.json();
+          data = { rate: json[cA][cB], date: json.date };
+          rateCache[key] = data;
+          rateCache[`${cB}_${cA}`] = { rate: 1 / json[cA][cB], date: json.date };
+        }
+        currentRate = data.rate;
+
+        const fmtRate = (r) => r < 0.01 ? r.toFixed(6) : r < 1 ? r.toFixed(4) : r.toFixed(2);
+
+        document.getElementById('rateDisplay').innerHTML = `
+          <div class="rate-line">1 ${symA} = <span>${fmtRate(data.rate)} ${symB}</span></div>
+          <div class="rate-line">1 ${symB} = <span>${fmtRate(1/data.rate)} ${symA}</span></div>
+        `;
+        document.getElementById('rateUpdated').textContent =
+          t(`更新於 ${data.date}`, `Updated ${data.date}`);
+
+        convertAmount('A');
+      } catch(e) {
+        document.getElementById('rateDisplay').innerHTML =
+          `<div class="rate-loading">${t('匯率載入失敗，請稍後再試','Failed to load rate, please retry')}</div>`;
+        currentRate = null;
+      }
+    }
+
+    function convertAmount(from) {
+      if (!currentRate) return;
+      const aEl = document.getElementById('amountA');
+      const bEl = document.getElementById('amountB');
+      if (from === 'A') {
+        const v = parseFloat(aEl.value);
+        bEl.value = isNaN(v) ? '' : parseFloat((v * currentRate).toFixed(4));
+      } else {
+        const v = parseFloat(bEl.value);
+        aEl.value = isNaN(v) ? '' : parseFloat((v / currentRate).toFixed(4));
+      }
+    }
+
+    /* ── lang change ── */
+    document.addEventListener('langchange', () => {
+      buildSelects();
+      updateTimeLabels();
+      updateOffset();
+      convertTime('A');
+    });
+
+    /* ── init ── */
+    buildSelects();
+    updateTimeLabels();
+    updateOffset();
+    convertTime('A');
+    fetchRate();
+    tickClocks();
+    setInterval(tickClocks, 1000);
+
+    // Set timeInputA to current local hour:min as default
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    document.getElementById('timeInputA').value = `${hh}:${mm}`;
+    convertTime('A');
+  </script>
+
+</body>
+</html>
