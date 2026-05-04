@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>計時器｜Kit</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .timer-wrap {
+      background: #fff;
+      border-radius: 20px;
+      padding: 32px 28px;
+      border: 1px solid #e8edf3;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+    }
+
+    .mode-tabs {
+      display: flex;
+      background: #f7f9fc;
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 32px;
+      border: 1px solid #e8edf3;
+    }
+    .mode-tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #888;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.18s;
+    }
+    .mode-tab.active {
+      background: #fff;
+      color: #2da58e;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    /* Big clock display */
+    .clock-display {
+      text-align: center;
+      margin: 8px 0 28px;
+    }
+    .clock-time {
+      font-size: clamp(3.5rem, 14vw, 5.5rem);
+      font-weight: 800;
+      letter-spacing: -2px;
+      color: #1a1a2e;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    .clock-ms {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #aaa;
+      letter-spacing: -1px;
+    }
+
+    /* Progress ring */
+    .ring-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .ring-svg { transform: rotate(-90deg); }
+    .ring-bg   { fill: none; stroke: #f0f3f7; stroke-width: 8; }
+    .ring-prog { fill: none; stroke: #2da58e; stroke-width: 8;
+                 stroke-linecap: round; transition: stroke-dashoffset 0.9s linear; }
+    .ring-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Countdown input */
+    .cd-inputs {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      align-items: flex-end;
+      margin-bottom: 28px;
+    }
+    .cd-field { text-align: center; }
+    .cd-field label { display: block; font-size: 0.75rem; color: #aaa; margin-bottom: 4px; }
+    .cd-input {
+      width: 72px;
+      padding: 12px 8px;
+      border: 1.5px solid #e8edf3;
+      border-radius: 12px;
+      font-size: 1.6rem;
+      font-weight: 700;
+      text-align: center;
+      font-family: inherit;
+      color: #1a1a2e;
+      background: #f7f9fc;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .cd-input:focus { border-color: #2da58e; background: #fff; }
+    .cd-sep { font-size: 1.8rem; font-weight: 700; color: #ccc; padding-bottom: 10px; }
+
+    /* Buttons */
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    .t-btn {
+      flex: 1;
+      max-width: 160px;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: filter 0.15s, transform 0.1s;
+    }
+    .t-btn:active { transform: scale(0.96); }
+    .t-btn:hover { filter: brightness(0.93); }
+    .btn-primary { background: #2da58e; color: #fff; }
+    .btn-secondary { background: #f0f3f7; color: #555; }
+    .btn-danger { background: #fff0f0; color: #e05c5c; }
+
+    /* Lap list */
+    .lap-list {
+      margin-top: 24px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .lap-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .lap-item:nth-child(odd) { background: #f7f9fc; }
+    .lap-label { color: #888; font-weight: 600; }
+    .lap-time  { font-weight: 700; color: #1a1a2e; }
+    .lap-delta { color: #aaa; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="../index.html" class="logo">⚙️ Kit</a>
+    </div>
+  </nav>
+
+  <div class="tool-page-wrap" style="max-width:480px">
+    <a href="../index.html" class="back-link">← 返回工具列表</a>
+    <h1>⏱️ 計時器</h1>
+
+    <div class="timer-wrap">
+      <div class="mode-tabs">
+        <button class="mode-tab active" onclick="switchMode('stopwatch')">碼錶</button>
+        <button class="mode-tab" onclick="switchMode('countdown')">倒數計時</button>
+      </div>
+
+      <!-- ===== STOPWATCH ===== -->
+      <div id="sw-panel">
+        <div class="clock-display">
+          <div class="clock-time" id="sw-display">00:00</div>
+          <div class="clock-ms" id="sw-ms">.00</div>
+        </div>
+        <div class="btn-row">
+          <button class="t-btn btn-secondary" id="sw-lap-btn" onclick="swLap()" disabled>計次</button>
+          <button class="t-btn btn-primary"   id="sw-start-btn" onclick="swToggle()">開始</button>
+          <button class="t-btn btn-secondary" id="sw-reset-btn" onclick="swReset()">重置</button>
+        </div>
+        <div class="lap-list" id="sw-laps"></div>
+      </div>
+
+      <!-- ===== COUNTDOWN ===== -->
+      <div id="cd-panel" class="hidden">
+        <div class="ring-wrap" id="cd-ring-wrap">
+          <svg class="ring-svg" width="200" height="200" viewBox="0 0 200 200">
+            <circle class="ring-bg"   cx="100" cy="100" r="86"/>
+            <circle class="ring-prog" id="cd-ring" cx="100" cy="100" r="86"
+                    stroke-dasharray="540" stroke-dashoffset="0"/>
+          </svg>
+          <div class="ring-text">
+            <div class="clock-time" id="cd-display" style="font-size:3rem">00:00</div>
+          </div>
+        </div>
+
+        <div class="cd-inputs" id="cd-inputs">
+          <div class="cd-field">
+            <label>時</label>
+            <input class="cd-input" id="cd-h" type="number" min="0" max="99" value="0">
+          </div>
+          <div class="cd-sep">:</div>
+          <div class="cd-field">
+            <label>分</label>
+            <input class="cd-input" id="cd-m" type="number" min="0" max="59" value="5">
+          </div>
+          <div class="cd-sep">:</div>
+          <div class="cd-field">
+            <label>秒</label>
+            <input class="cd-input" id="cd-s" type="number" min="0" max="59" value="0">
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="t-btn btn-primary"   id="cd-start-btn" onclick="cdToggle()">開始</button>
+          <button class="t-btn btn-secondary" id="cd-reset-btn" onclick="cdReset()">重置</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ── mode switch ── */
+    function switchMode(mode) {
+      document.querySelectorAll('.mode-tab').forEach((t, i) =>
+        t.classList.toggle('active', ['stopwatch','countdown'][i] === mode));
+      document.getElementById('sw-panel').classList.toggle('hidden', mode !== 'stopwatch');
+      document.getElementById('cd-panel').classList.toggle('hidden', mode !== 'countdown');
+    }
+
+    /* ══════════ STOPWATCH ══════════ */
+    let swInterval = null, swElapsed = 0, swStart = 0, swRunning = false;
+    let laps = [], lastLapTime = 0;
+
+    function swFmt(ms) {
+      const h = Math.floor(ms / 3600000);
+      const m = Math.floor((ms % 3600000) / 60000);
+      const s = Math.floor((ms % 60000) / 1000);
+      const cs = Math.floor((ms % 1000) / 10);
+      const main = h > 0
+        ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+        : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      return { main, cs: '.' + String(cs).padStart(2,'0') };
+    }
+
+    function swTick() {
+      swElapsed = Date.now() - swStart;
+      const { main, cs } = swFmt(swElapsed);
+      document.getElementById('sw-display').textContent = main;
+      document.getElementById('sw-ms').textContent = cs;
+    }
+
+    function swToggle() {
+      if (!swRunning) {
+        swStart = Date.now() - swElapsed;
+        swInterval = setInterval(swTick, 30);
+        swRunning = true;
+        document.getElementById('sw-start-btn').textContent = '暫停';
+        document.getElementById('sw-lap-btn').disabled = false;
+      } else {
+        clearInterval(swInterval);
+        swRunning = false;
+        document.getElementById('sw-start-btn').textContent = '繼續';
+      }
+    }
+
+    function swReset() {
+      clearInterval(swInterval);
+      swRunning = false; swElapsed = 0; laps = []; lastLapTime = 0;
+      document.getElementById('sw-display').textContent = '00:00';
+      document.getElementById('sw-ms').textContent = '.00';
+      document.getElementById('sw-start-btn').textContent = '開始';
+      document.getElementById('sw-lap-btn').disabled = true;
+      document.getElementById('sw-laps').innerHTML = '';
+    }
+
+    function swLap() {
+      const delta = swElapsed - lastLapTime;
+      lastLapTime = swElapsed;
+      laps.unshift({ n: laps.length + 1, total: swElapsed, delta });
+      renderLaps();
+    }
+
+    function renderLaps() {
+      document.getElementById('sw-laps').innerHTML = laps.map(l => {
+        const t = swFmt(l.total); const d = swFmt(l.delta);
+        return `<div class="lap-item">
+          <span class="lap-label">第 ${l.n} 次</span>
+          <span class="lap-delta">+${d.main}${d.cs}</span>
+          <span class="lap-time">${t.main}${t.cs}</span>
+        </div>`;
+      }).join('');
+    }
+
+    /* ══════════ COUNTDOWN ══════════ */
+    let cdInterval = null, cdRemaining = 0, cdTotal = 0, cdRunning = false;
+    const CIRCUMFERENCE = 2 * Math.PI * 86; // ~540
+
+    function cdFmt(ms) {
+      const h = Math.floor(ms / 3600000);
+      const m = Math.floor((ms % 3600000) / 60000);
+      const s = Math.ceil((ms % 60000) / 1000);
+      return h > 0
+        ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`
+        : `${String(m).padStart(2,'0')}:${String(s % 60 === 0 && s !== 0 ? 0 : s % 60).padStart(2,'0')}`;
+    }
+
+    function cdGetInput() {
+      const h = parseInt(document.getElementById('cd-h').value) || 0;
+      const m = parseInt(document.getElementById('cd-m').value) || 0;
+      const s = parseInt(document.getElementById('cd-s').value) || 0;
+      return (h * 3600 + m * 60 + s) * 1000;
+    }
+
+    function cdUpdateRing(remaining, total) {
+      const pct = total > 0 ? remaining / total : 0;
+      const offset = CIRCUMFERENCE * (1 - pct);
+      document.getElementById('cd-ring').style.strokeDashoffset = offset;
+      const color = pct > 0.33 ? '#2da58e' : pct > 0.1 ? '#e07c2a' : '#e05c5c';
+      document.getElementById('cd-ring').style.stroke = color;
+    }
+
+    function cdTick() {
+      cdRemaining -= 100;
+      if (cdRemaining <= 0) {
+        cdRemaining = 0;
+        clearInterval(cdInterval);
+        cdRunning = false;
+        document.getElementById('cd-start-btn').textContent = '開始';
+        document.getElementById('cd-inputs').classList.remove('hidden');
+        cdPlayBeep();
+      }
+      document.getElementById('cd-display').textContent = cdFmt(cdRemaining);
+      cdUpdateRing(cdRemaining, cdTotal);
+    }
+
+    function cdToggle() {
+      if (!cdRunning) {
+        if (cdRemaining === 0) {
+          cdTotal = cdGetInput();
+          cdRemaining = cdTotal;
+          if (cdRemaining === 0) return;
+        }
+        document.getElementById('cd-inputs').classList.add('hidden');
+        cdInterval = setInterval(cdTick, 100);
+        cdRunning = true;
+        document.getElementById('cd-start-btn').textContent = '暫停';
+      } else {
+        clearInterval(cdInterval);
+        cdRunning = false;
+        document.getElementById('cd-start-btn').textContent = '繼續';
+      }
+    }
+
+    function cdReset() {
+      clearInterval(cdInterval);
+      cdRunning = false; cdRemaining = 0;
+      document.getElementById('cd-display').textContent = '00:00';
+      document.getElementById('cd-start-btn').textContent = '開始';
+      document.getElementById('cd-inputs').classList.remove('hidden');
+      cdUpdateRing(1, 1);
+    }
+
+    function cdPlayBeep() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        [0, 0.3, 0.6].forEach(t => {
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.connect(g); g.connect(ctx.destination);
+          o.frequency.value = 880;
+          g.gain.setValueAtTime(0.4, ctx.currentTime + t);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.25);
+          o.start(ctx.currentTime + t);
+          o.stop(ctx.currentTime + t + 0.25);
+        });
+      } catch(e) {}
+    }
+
+    /* init ring */
+    document.getElementById('cd-ring').style.strokeDasharray = CIRCUMFERENCE;
+    document.getElementById('cd-ring').style.strokeDashoffset = 0;
+
+    /* keyboard shortcut: Space = toggle */
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+        e.preventDefault();
+        const isCD = !document.getElementById('cd-panel').classList.contains('hidden');
+        isCD ? cdToggle() : swToggle();
+      }
+    });
+  </script>
+
+</body>
+</html>
