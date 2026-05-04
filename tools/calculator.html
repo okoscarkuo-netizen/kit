@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>計算機｜Kit</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="../index.html" class="logo">⚙️ Kit</a>
+    </div>
+  </nav>
+
+  <div class="tool-page-wrap">
+    <a href="../index.html" class="back-link">← 返回工具列表</a>
+    <h1>🧮 計算機</h1>
+
+    <div class="calc-wrap">
+      <div class="calc-display">
+        <div class="calc-expression" id="expression"></div>
+        <div class="calc-value" id="display">0</div>
+      </div>
+
+      <div class="calc-buttons">
+        <button class="calc-btn btn-clear" onclick="clearAll()">AC</button>
+        <button class="calc-btn btn-back"  onclick="backspace()">⌫</button>
+        <button class="calc-btn btn-op"    onclick="inputOp('%')">%</button>
+        <button class="calc-btn btn-op"    onclick="inputOp('÷')">÷</button>
+
+        <button class="calc-btn btn-num"   onclick="inputNum('7')">7</button>
+        <button class="calc-btn btn-num"   onclick="inputNum('8')">8</button>
+        <button class="calc-btn btn-num"   onclick="inputNum('9')">9</button>
+        <button class="calc-btn btn-op"    onclick="inputOp('×')">×</button>
+
+        <button class="calc-btn btn-num"   onclick="inputNum('4')">4</button>
+        <button class="calc-btn btn-num"   onclick="inputNum('5')">5</button>
+        <button class="calc-btn btn-num"   onclick="inputNum('6')">6</button>
+        <button class="calc-btn btn-op"    onclick="inputOp('−')">−</button>
+
+        <button class="calc-btn btn-num"   onclick="inputNum('1')">1</button>
+        <button class="calc-btn btn-num"   onclick="inputNum('2')">2</button>
+        <button class="calc-btn btn-num"   onclick="inputNum('3')">3</button>
+        <button class="calc-btn btn-op"    onclick="inputOp('+')">+</button>
+
+        <button class="calc-btn btn-num btn-zero" onclick="inputNum('0')">0</button>
+        <button class="calc-btn btn-num"   onclick="inputDot()">.</button>
+        <button class="calc-btn btn-eq"    onclick="calculate()">=</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let current = '0';
+    let expression = '';
+    let justCalc = false;
+
+    const displayEl = document.getElementById('display');
+    const exprEl = document.getElementById('expression');
+
+    function update() {
+      displayEl.textContent = current;
+      exprEl.textContent = expression;
+    }
+
+    function inputNum(n) {
+      if (justCalc) { current = n; expression = ''; justCalc = false; }
+      else current = current === '0' ? n : current + n;
+      update();
+    }
+
+    function inputDot() {
+      if (justCalc) { current = '0.'; expression = ''; justCalc = false; }
+      else if (!current.includes('.')) current += '.';
+      update();
+    }
+
+    function inputOp(op) {
+      justCalc = false;
+      expression = (expression || current) + ' ' + op + ' ';
+      current = '0';
+      update();
+    }
+
+    function clearAll() {
+      current = '0'; expression = ''; justCalc = false;
+      update();
+    }
+
+    function backspace() {
+      if (justCalc) { clearAll(); return; }
+      current = current.length > 1 ? current.slice(0, -1) : '0';
+      update();
+    }
+
+    function calculate() {
+      if (!expression) return;
+      const full = expression + current;
+      exprEl.textContent = full + ' =';
+      try {
+        const sanitized = full
+          .replace(/÷/g, '/')
+          .replace(/×/g, '*')
+          .replace(/−/g, '-')
+          .replace(/(\d+)\s*%/g, '($1/100)');
+        const result = Function('"use strict"; return (' + sanitized + ')')();
+        current = parseFloat(result.toFixed(10)).toString();
+      } catch {
+        current = '錯誤';
+      }
+      expression = '';
+      justCalc = true;
+      displayEl.textContent = current;
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key >= '0' && e.key <= '9') inputNum(e.key);
+      else if (e.key === '.') inputDot();
+      else if (e.key === '+') inputOp('+');
+      else if (e.key === '-') inputOp('−');
+      else if (e.key === '*') inputOp('×');
+      else if (e.key === '/') { e.preventDefault(); inputOp('÷'); }
+      else if (e.key === '%') inputOp('%');
+      else if (e.key === 'Enter' || e.key === '=') calculate();
+      else if (e.key === 'Backspace') backspace();
+      else if (e.key === 'Escape') clearAll();
+    });
+  </script>
+
+</body>
+</html>
