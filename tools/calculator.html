@@ -5,18 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>計算機｜Kit</title>
   <link rel="stylesheet" href="../style.css">
+  <script src="../lang.js"></script>
 </head>
 <body>
 
   <nav class="navbar">
     <div class="nav-inner">
       <a href="../index.html" class="logo">⚙️ Kit</a>
+      <button id="lang-toggle" class="lang-toggle" onclick="toggleLang()">EN</button>
     </div>
   </nav>
 
   <div class="tool-page-wrap">
-    <a href="../index.html" class="back-link">← 返回工具列表</a>
-    <h1>🧮 計算機</h1>
+    <a href="../index.html" class="back-link" data-zh="← 返回工具列表" data-en="← Back to Tools">← 返回工具列表</a>
+    <h1>🧮 <span data-zh="計算機" data-en="Calculator">計算機</span></h1>
 
     <div class="calc-wrap">
       <div class="calc-display">
@@ -108,7 +110,7 @@
         const result = Function('"use strict"; return (' + sanitized + ')')();
         current = parseFloat(result.toFixed(10)).toString();
       } catch {
-        current = '錯誤';
+        current = t('錯誤', 'Error');
       }
       expression = '';
       justCalc = true;

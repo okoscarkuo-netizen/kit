@@ -23,7 +23,22 @@ body {
   height: 60px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
+.lang-toggle {
+  padding: 6px 16px;
+  border: 1.5px solid #e8edf3;
+  border-radius: 999px;
+  background: transparent;
+  color: #666;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 0.5px;
+  transition: all 0.15s;
+}
+.lang-toggle:hover { border-color: #2da58e; color: #2da58e; }
 .logo {
   font-size: 1.25rem;
   font-weight: 700;

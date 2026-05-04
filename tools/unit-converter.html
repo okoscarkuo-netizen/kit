@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>單位換算｜Kit</title>
   <link rel="stylesheet" href="../style.css">
+  <script src="../lang.js"></script>
   <style>
     .uc-wrap {
       background: #fff;
@@ -13,7 +14,6 @@
       border: 1px solid #e8edf3;
       box-shadow: 0 4px 20px rgba(0,0,0,0.07);
     }
-
     .category-tabs {
       display: flex;
       gap: 8px;
@@ -32,16 +32,8 @@
       font-family: inherit;
       transition: all 0.15s;
     }
-    .tab-btn.active {
-      background: #2da58e;
-      color: #fff;
-      border-color: #2da58e;
-    }
-    .tab-btn:hover:not(.active) {
-      border-color: #2da58e;
-      color: #2da58e;
-    }
-
+    .tab-btn.active { background: #2da58e; color: #fff; border-color: #2da58e; }
+    .tab-btn:hover:not(.active) { border-color: #2da58e; color: #2da58e; }
     .converter-row {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
@@ -49,11 +41,7 @@
       align-items: center;
       margin-bottom: 20px;
     }
-    .conv-side {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+    .conv-side { display: flex; flex-direction: column; gap: 8px; }
     .conv-input {
       width: 100%;
       padding: 14px 16px;
@@ -82,47 +70,28 @@
       transition: border-color 0.15s;
     }
     .conv-select:focus { border-color: #2da58e; }
-
     .swap-btn {
-      width: 44px;
-      height: 44px;
+      width: 44px; height: 44px;
       border-radius: 50%;
       border: 1.5px solid #e8edf3;
       background: #fff;
       font-size: 1.2rem;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       transition: all 0.15s;
       margin-top: 20px;
       flex-shrink: 0;
     }
     .swap-btn:hover { background: #e8f5f0; border-color: #2da58e; }
-
-    .common-table {
-      margin-top: 8px;
-    }
+    .common-table { margin-top: 8px; }
     .common-table h3 {
-      font-size: 0.85rem;
-      color: #aaa;
-      font-weight: 600;
-      margin-bottom: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      font-size: 0.85rem; color: #aaa; font-weight: 600;
+      margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;
     }
-    .table-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 8px;
-    }
+    .table-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
     .table-item {
-      background: #f7f9fc;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 0.85rem;
-      color: #555;
-      border: 1px solid #e8edf3;
+      background: #f7f9fc; border-radius: 10px; padding: 10px 14px;
+      font-size: 0.85rem; color: #555; border: 1px solid #e8edf3;
     }
     .table-item span { font-weight: 700; color: #1a1a2e; }
   </style>
@@ -132,27 +101,23 @@
   <nav class="navbar">
     <div class="nav-inner">
       <a href="../index.html" class="logo">⚙️ Kit</a>
+      <button id="lang-toggle" class="lang-toggle" onclick="toggleLang()">EN</button>
     </div>
   </nav>
 
   <div class="tool-page-wrap" style="max-width:600px">
-    <a href="../index.html" class="back-link">← 返回工具列表</a>
-    <h1>📏 單位換算</h1>
+    <a href="../index.html" class="back-link" data-zh="← 返回工具列表" data-en="← Back to Tools">← 返回工具列表</a>
+    <h1>📏 <span data-zh="單位換算" data-en="Unit Converter">單位換算</span></h1>
 
     <div class="uc-wrap">
-      <div class="category-tabs">
-        <button class="tab-btn active" onclick="setCategory('length')">長度</button>
-        <button class="tab-btn" onclick="setCategory('weight')">重量</button>
-        <button class="tab-btn" onclick="setCategory('temperature')">溫度</button>
-        <button class="tab-btn" onclick="setCategory('area')">面積</button>
-      </div>
+      <div class="category-tabs" id="catTabs"></div>
 
       <div class="converter-row">
         <div class="conv-side">
           <input class="conv-input" id="inputA" type="number" value="1" oninput="convertAtoB()">
           <select class="conv-select" id="selectA" onchange="convertAtoB()"></select>
         </div>
-        <button class="swap-btn" onclick="swapUnits()" title="互換">⇄</button>
+        <button class="swap-btn" onclick="swapUnits()" title="⇄">⇄</button>
         <div class="conv-side">
           <input class="conv-input" id="inputB" type="number" oninput="convertBtoA()">
           <select class="conv-select" id="selectB" onchange="convertAtoB()"></select>
@@ -160,7 +125,7 @@
       </div>
 
       <div class="common-table">
-        <h3>常用對照</h3>
+        <h3 id="commonTitle" data-zh="常用對照" data-en="Quick Reference">常用對照</h3>
         <div class="table-grid" id="commonTable"></div>
       </div>
     </div>
@@ -169,107 +134,92 @@
   <script>
     const categories = {
       length: {
+        zh: '長度', en: 'Length',
         units: [
-          { label: '公里 (km)', value: 'km', toBase: v => v * 1000 },
-          { label: '公尺 (m)',  value: 'm',  toBase: v => v },
-          { label: '公分 (cm)', value: 'cm', toBase: v => v / 100 },
-          { label: '公厘 (mm)', value: 'mm', toBase: v => v / 1000 },
-          { label: '英里 (mi)', value: 'mi', toBase: v => v * 1609.344 },
-          { label: '碼 (yd)',   value: 'yd', toBase: v => v * 0.9144 },
-          { label: '英尺 (ft)', value: 'ft', toBase: v => v * 0.3048 },
-          { label: '英吋 (in)', value: 'in', toBase: v => v * 0.0254 },
+          { zh: '公里 (km)', en: 'Kilometer (km)', value: 'km', toBase: v => v * 1000 },
+          { zh: '公尺 (m)',  en: 'Meter (m)',       value: 'm',  toBase: v => v },
+          { zh: '公分 (cm)', en: 'Centimeter (cm)', value: 'cm', toBase: v => v / 100 },
+          { zh: '公厘 (mm)', en: 'Millimeter (mm)', value: 'mm', toBase: v => v / 1000 },
+          { zh: '英里 (mi)', en: 'Mile (mi)',        value: 'mi', toBase: v => v * 1609.344 },
+          { zh: '碼 (yd)',   en: 'Yard (yd)',        value: 'yd', toBase: v => v * 0.9144 },
+          { zh: '英尺 (ft)', en: 'Foot (ft)',        value: 'ft', toBase: v => v * 0.3048 },
+          { zh: '英吋 (in)', en: 'Inch (in)',        value: 'in', toBase: v => v * 0.0254 },
         ],
-        fromBase: (v, unit) => {
-          const map = { km: v/1000, m: v, cm: v*100, mm: v*1000,
-                        mi: v/1609.344, yd: v/0.9144, ft: v/0.3048, in: v/0.0254 };
-          return map[unit];
-        },
+        fromBase: (v, u) => ({ km:v/1000, m:v, cm:v*100, mm:v*1000, mi:v/1609.344, yd:v/0.9144, ft:v/0.3048, in:v/0.0254 })[u],
         defaults: ['m', 'ft'],
-        common: [
-          '1 英里 = <span>1.609 公里</span>',
-          '1 英尺 = <span>30.48 公分</span>',
-          '1 英吋 = <span>2.54 公分</span>',
-          '1 公尺 = <span>3.281 英尺</span>',
-        ]
+        common: {
+          zh: ['1 英里 = <span>1.609 公里</span>','1 英尺 = <span>30.48 公分</span>','1 英吋 = <span>2.54 公分</span>','1 公尺 = <span>3.281 英尺</span>'],
+          en: ['1 mile = <span>1.609 km</span>','1 foot = <span>30.48 cm</span>','1 inch = <span>2.54 cm</span>','1 meter = <span>3.281 ft</span>'],
+        }
       },
       weight: {
+        zh: '重量', en: 'Weight',
         units: [
-          { label: '公斤 (kg)', value: 'kg', toBase: v => v },
-          { label: '公克 (g)',  value: 'g',  toBase: v => v / 1000 },
-          { label: '毫克 (mg)', value: 'mg', toBase: v => v / 1e6 },
-          { label: '公噸 (t)',  value: 't',  toBase: v => v * 1000 },
-          { label: '磅 (lb)',   value: 'lb', toBase: v => v * 0.453592 },
-          { label: '盎司 (oz)', value: 'oz', toBase: v => v * 0.0283495 },
-          { label: '台斤',      value: 'catty', toBase: v => v * 0.6 },
+          { zh: '公斤 (kg)', en: 'Kilogram (kg)',  value: 'kg',    toBase: v => v },
+          { zh: '公克 (g)',  en: 'Gram (g)',        value: 'g',     toBase: v => v / 1000 },
+          { zh: '毫克 (mg)', en: 'Milligram (mg)', value: 'mg',    toBase: v => v / 1e6 },
+          { zh: '公噸 (t)',  en: 'Metric Ton (t)', value: 't',     toBase: v => v * 1000 },
+          { zh: '磅 (lb)',   en: 'Pound (lb)',      value: 'lb',    toBase: v => v * 0.453592 },
+          { zh: '盎司 (oz)', en: 'Ounce (oz)',      value: 'oz',    toBase: v => v * 0.0283495 },
+          { zh: '台斤',      en: 'Catty',           value: 'catty', toBase: v => v * 0.6 },
         ],
-        fromBase: (v, unit) => {
-          const map = { kg: v, g: v*1000, mg: v*1e6, t: v/1000,
-                        lb: v/0.453592, oz: v/0.0283495, catty: v/0.6 };
-          return map[unit];
-        },
+        fromBase: (v, u) => ({ kg:v, g:v*1000, mg:v*1e6, t:v/1000, lb:v/0.453592, oz:v/0.0283495, catty:v/0.6 })[u],
         defaults: ['kg', 'lb'],
-        common: [
-          '1 公斤 = <span>2.205 磅</span>',
-          '1 磅 = <span>453.6 公克</span>',
-          '1 台斤 = <span>600 公克</span>',
-          '1 盎司 = <span>28.35 公克</span>',
-        ]
+        common: {
+          zh: ['1 公斤 = <span>2.205 磅</span>','1 磅 = <span>453.6 公克</span>','1 台斤 = <span>600 公克</span>','1 盎司 = <span>28.35 公克</span>'],
+          en: ['1 kg = <span>2.205 lb</span>','1 lb = <span>453.6 g</span>','1 catty = <span>600 g</span>','1 oz = <span>28.35 g</span>'],
+        }
       },
       temperature: {
+        zh: '溫度', en: 'Temperature',
         units: [
-          { label: '攝氏 (°C)', value: 'C' },
-          { label: '華氏 (°F)', value: 'F' },
-          { label: '克氏 (K)',  value: 'K' },
+          { zh: '攝氏 (°C)', en: 'Celsius (°C)',    value: 'C' },
+          { zh: '華氏 (°F)', en: 'Fahrenheit (°F)', value: 'F' },
+          { zh: '克氏 (K)',  en: 'Kelvin (K)',       value: 'K' },
         ],
         convert: (v, from, to) => {
-          let c;
-          if (from === 'C') c = v;
-          else if (from === 'F') c = (v - 32) * 5/9;
-          else c = v - 273.15;
-          if (to === 'C') return c;
-          if (to === 'F') return c * 9/5 + 32;
-          return c + 273.15;
+          let c = from==='C'?v : from==='F'?(v-32)*5/9 : v-273.15;
+          return to==='C'?c : to==='F'?c*9/5+32 : c+273.15;
         },
         defaults: ['C', 'F'],
-        common: [
-          '0°C = <span>32°F</span>',
-          '100°C = <span>212°F</span>',
-          '37°C = <span>98.6°F</span>',
-          '20°C = <span>293.15 K</span>',
-        ]
+        common: {
+          zh: ['0°C = <span>32°F</span>','100°C = <span>212°F</span>','37°C = <span>98.6°F</span>','20°C = <span>293.15 K</span>'],
+          en: ['0°C = <span>32°F</span>','100°C = <span>212°F</span>','37°C = <span>98.6°F</span>','20°C = <span>293.15 K</span>'],
+        }
       },
       area: {
+        zh: '面積', en: 'Area',
         units: [
-          { label: '平方公里 (km²)', value: 'km2', toBase: v => v * 1e6 },
-          { label: '平方公尺 (m²)',  value: 'm2',  toBase: v => v },
-          { label: '平方公分 (cm²)', value: 'cm2', toBase: v => v / 1e4 },
-          { label: '公頃 (ha)',       value: 'ha',  toBase: v => v * 1e4 },
-          { label: '英畝 (acre)',     value: 'acre',toBase: v => v * 4046.86 },
-          { label: '坪',              value: 'ping', toBase: v => v * 3.30579 },
-          { label: '平方英尺 (ft²)', value: 'ft2', toBase: v => v * 0.092903 },
+          { zh: '平方公里 (km²)', en: 'Sq Kilometer (km²)', value: 'km2',  toBase: v => v * 1e6 },
+          { zh: '平方公尺 (m²)',  en: 'Sq Meter (m²)',      value: 'm2',   toBase: v => v },
+          { zh: '平方公分 (cm²)', en: 'Sq Centimeter (cm²)',value: 'cm2',  toBase: v => v / 1e4 },
+          { zh: '公頃 (ha)',      en: 'Hectare (ha)',        value: 'ha',   toBase: v => v * 1e4 },
+          { zh: '英畝 (acre)',    en: 'Acre',                value: 'acre', toBase: v => v * 4046.86 },
+          { zh: '坪',             en: 'Ping (坪)',            value: 'ping', toBase: v => v * 3.30579 },
+          { zh: '平方英尺 (ft²)', en: 'Sq Foot (ft²)',       value: 'ft2',  toBase: v => v * 0.092903 },
         ],
-        fromBase: (v, unit) => {
-          const map = { km2: v/1e6, m2: v, cm2: v*1e4, ha: v/1e4,
-                        acre: v/4046.86, ping: v/3.30579, ft2: v/0.092903 };
-          return map[unit];
-        },
+        fromBase: (v, u) => ({ km2:v/1e6, m2:v, cm2:v*1e4, ha:v/1e4, acre:v/4046.86, ping:v/3.30579, ft2:v/0.092903 })[u],
         defaults: ['m2', 'ping'],
-        common: [
-          '1 坪 = <span>3.306 m²</span>',
-          '1 公頃 = <span>3025 坪</span>',
-          '1 英畝 = <span>4046.9 m²</span>',
-          '1 km² = <span>100 公頃</span>',
-        ]
+        common: {
+          zh: ['1 坪 = <span>3.306 m²</span>','1 公頃 = <span>3025 坪</span>','1 英畝 = <span>4046.9 m²</span>','1 km² = <span>100 公頃</span>'],
+          en: ['1 Ping = <span>3.306 m²</span>','1 ha = <span>10,000 m²</span>','1 acre = <span>4046.9 m²</span>','1 km² = <span>100 ha</span>'],
+        }
       }
     };
 
+    const catKeys = ['length','weight','temperature','area'];
     let currentCat = 'length';
+
+    function buildTabs() {
+      const lang = getLang();
+      document.getElementById('catTabs').innerHTML = catKeys.map(k =>
+        `<button class="tab-btn${k===currentCat?' active':''}" onclick="setCategory('${k}')">${categories[k][lang]}</button>`
+      ).join('');
+    }
 
     function setCategory(cat) {
       currentCat = cat;
-      document.querySelectorAll('.tab-btn').forEach((b, i) => {
-        b.classList.toggle('active', ['length','weight','temperature','area'][i] === cat);
-      });
+      buildTabs();
       buildSelects();
       convertAtoB();
       buildCommon();
@@ -277,11 +227,13 @@
 
     function buildSelects() {
       const cat = categories[currentCat];
+      const lang = getLang();
+      const prevA = document.getElementById('selectA').value;
+      const prevB = document.getElementById('selectB').value;
       [document.getElementById('selectA'), document.getElementById('selectB')].forEach((sel, i) => {
-        sel.innerHTML = cat.units.map(u =>
-          `<option value="${u.value}">${u.label}</option>`
-        ).join('');
-        sel.value = cat.defaults[i];
+        sel.innerHTML = cat.units.map(u => `<option value="${u.value}">${u[lang]}</option>`).join('');
+        const prev = i === 0 ? prevA : prevB;
+        sel.value = cat.units.find(u => u.value === prev) ? prev : cat.defaults[i];
       });
       document.getElementById('inputA').value = 1;
     }
@@ -305,33 +257,34 @@
 
     function convertAtoB() {
       const val = parseFloat(document.getElementById('inputA').value);
-      const from = document.getElementById('selectA').value;
-      const to = document.getElementById('selectB').value;
-      document.getElementById('inputB').value = fmt(doConvert(val, from, to));
+      document.getElementById('inputB').value = fmt(doConvert(val, document.getElementById('selectA').value, document.getElementById('selectB').value));
     }
 
     function convertBtoA() {
       const val = parseFloat(document.getElementById('inputB').value);
-      const from = document.getElementById('selectB').value;
-      const to = document.getElementById('selectA').value;
-      document.getElementById('inputA').value = fmt(doConvert(val, from, to));
+      document.getElementById('inputA').value = fmt(doConvert(val, document.getElementById('selectB').value, document.getElementById('selectA').value));
     }
 
     function swapUnits() {
-      const sa = document.getElementById('selectA');
-      const sb = document.getElementById('selectB');
+      const sa = document.getElementById('selectA'), sb = document.getElementById('selectB');
       const ia = document.getElementById('inputA');
-      const ib = document.getElementById('inputB');
       [sa.value, sb.value] = [sb.value, sa.value];
-      ia.value = ib.value;
+      ia.value = document.getElementById('inputB').value;
       convertAtoB();
     }
 
     function buildCommon() {
-      const items = categories[currentCat].common;
-      document.getElementById('commonTable').innerHTML = items
+      const lang = getLang();
+      document.getElementById('commonTable').innerHTML = categories[currentCat].common[lang]
         .map(t => `<div class="table-item">${t}</div>`).join('');
     }
+
+    document.addEventListener('langchange', () => {
+      buildTabs();
+      buildSelects();
+      convertAtoB();
+      buildCommon();
+    });
 
     setCategory('length');
   </script>

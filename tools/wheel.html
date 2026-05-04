@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>隨機抽籤｜Kit</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="../lang.js"></script>
+  <style>
+    .wheel-layout {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 680px) { .wheel-layout { grid-template-columns: 1fr; } }
+    .wheel-area {
+      background: #fff; border-radius: 20px; padding: 28px;
+      border: 1px solid #e8edf3; box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+      display: flex; flex-direction: column; align-items: center; gap: 20px;
+    }
+    .canvas-wrap {
+      position: relative; display: flex; align-items: center; justify-content: center;
+    }
+    #wheelCanvas { border-radius: 50%; display: block; }
+    .pointer {
+      position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
+      width: 0; height: 0;
+      border-top: 14px solid transparent; border-bottom: 14px solid transparent;
+      border-right: 28px solid #1a1a2e;
+      filter: drop-shadow(-2px 0 4px rgba(0,0,0,0.25));
+    }
+    .spin-center {
+      position: absolute; width: 64px; height: 64px; background: #fff;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; font-weight: 800; color: #2da58e;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.18); cursor: pointer;
+      border: 3px solid #fff; transition: transform 0.15s; user-select: none;
+    }
+    .spin-center:hover { transform: scale(1.08); }
+    .spin-center:active { transform: scale(0.96); }
+    .spin-btn {
+      width: 100%; max-width: 240px; padding: 16px; border: none; border-radius: 14px;
+      background: #2da58e; color: #fff; font-size: 1.05rem; font-weight: 700;
+      cursor: pointer; font-family: inherit; transition: filter 0.15s, transform 0.1s;
+    }
+    .spin-btn:hover { filter: brightness(0.92); }
+    .spin-btn:active { transform: scale(0.97); }
+    .spin-btn:disabled { background: #ccc; cursor: default; filter: none; }
+    .result-box {
+      width: 100%; max-width: 280px; padding: 16px 20px; background: #f7f9fc;
+      border-radius: 14px; border: 1.5px solid #e8edf3; text-align: center;
+      min-height: 56px; display: flex; align-items: center; justify-content: center;
+    }
+    .result-text { font-size: 1.2rem; font-weight: 700; color: #2da58e; }
+    .result-placeholder { font-size: 0.9rem; color: #bbb; }
+    .options-panel {
+      background: #fff; border-radius: 20px; padding: 24px;
+      border: 1px solid #e8edf3; box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+    }
+    .options-panel h3 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; color: #1a1a2e; }
+    .add-input-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .add-input {
+      flex: 1; padding: 10px 14px; border: 1.5px solid #e8edf3; border-radius: 10px;
+      font-size: 0.95rem; font-family: inherit; outline: none; transition: border-color 0.15s;
+    }
+    .add-input:focus { border-color: #2da58e; }
+    .add-btn {
+      padding: 10px 16px; background: #2da58e; color: #fff; border: none;
+      border-radius: 10px; font-size: 1.1rem; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: filter 0.15s;
+    }
+    .add-btn:hover { filter: brightness(0.9); }
+    .option-list { display: flex; flex-direction: column; gap: 6px; }
+    .option-item {
+      display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+      border-radius: 10px; background: #f7f9fc; border: 1px solid #e8edf3;
+    }
+    .option-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .option-label {
+      flex: 1; font-size: 0.9rem; font-weight: 600; color: #1a1a2e;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      cursor: text;
+    }
+    .option-label:hover { color: #2da58e; }
+    .option-edit-input {
+      flex: 1; font-size: 0.9rem; font-weight: 600; font-family: inherit;
+      color: #1a1a2e; border: 1.5px solid #2da58e; border-radius: 6px;
+      padding: 2px 8px; outline: none; background: #fff; min-width: 0;
+    }
+    .del-btn {
+      background: none; border: none; color: #ccc; font-size: 1rem;
+      cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.15s;
+    }
+    .del-btn:hover { color: #e05c5c; }
+    .empty-hint { font-size: 0.85rem; color: #bbb; text-align: center; padding: 12px 0; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="../index.html" class="logo">⚙️ Kit</a>
+      <button id="lang-toggle" class="lang-toggle" onclick="toggleLang()">EN</button>
+    </div>
+  </nav>
+
+  <div class="tool-page-wrap" style="max-width:780px">
+    <a href="../index.html" class="back-link" data-zh="← 返回工具列表" data-en="← Back to Tools">← 返回工具列表</a>
+    <h1>🎡 <span data-zh="隨機抽籤" data-en="Random Draw">隨機抽籤</span></h1>
+
+    <div class="wheel-layout">
+      <div class="wheel-area">
+        <div class="canvas-wrap">
+          <canvas id="wheelCanvas" width="300" height="300"></canvas>
+          <div class="pointer"></div>
+          <div class="spin-center" onclick="spin()">GO</div>
+        </div>
+        <div class="result-box" id="resultBox">
+          <span class="result-placeholder" id="resultPlaceholder" data-zh="按 GO 開始抽籤" data-en="Press GO to spin">按 GO 開始抽籤</span>
+        </div>
+        <button class="spin-btn" id="spinBtn" onclick="spin()" data-zh="🎰 開始抽籤" data-en="🎰 Spin">🎰 開始抽籤</button>
+      </div>
+
+      <div class="options-panel">
+        <h3 data-zh="選項清單" data-en="Options">選項清單</h3>
+        <div class="add-input-row">
+          <input class="add-input" id="addInput" maxlength="20"
+                 data-zh-placeholder="輸入選項..." data-en-placeholder="Add option..."
+                 placeholder="輸入選項..."
+                 onkeydown="if(event.key==='Enter') addOption()">
+          <button class="add-btn" onclick="addOption()">+</button>
+        </div>
+        <div class="option-list" id="optionList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const COLORS = [
+      '#2da58e','#7c6fe0','#e07c2a','#e05c5c','#3a86ff',
+      '#f9c846','#43aa8b','#f8961e','#577590','#c77dff',
+      '#4cc9f0','#f72585','#4361ee','#7209b7','#06d6a0',
+    ];
+
+    let options = [
+      t('選項 A','Option A'), t('選項 B','Option B'),
+      t('選項 C','Option C'), t('選項 D','Option D')
+    ];
+    let spinning = false, currentAngle = 0;
+
+    function drawWheel(angle) {
+      const canvas = document.getElementById('wheelCanvas');
+      const ctx = canvas.getContext('2d');
+      const cx=canvas.width/2, cy=canvas.height/2, r=cx-4, n=options.length;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      if (n===0) {
+        ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+        ctx.fillStyle='#f0f3f7'; ctx.fill();
+        ctx.fillStyle='#ccc'; ctx.font='14px -apple-system,sans-serif';
+        ctx.textAlign='center';
+        ctx.fillText(t('請先新增選項','Add options first'),cx,cy);
+        return;
+      }
+      const slice=(Math.PI*2)/n;
+      options.forEach((opt,i)=>{
+        const start=angle+i*slice, end=start+slice;
+        ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,start,end);
+        ctx.closePath(); ctx.fillStyle=COLORS[i%COLORS.length]; ctx.fill();
+        ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+        ctx.save(); ctx.translate(cx,cy); ctx.rotate(start+slice/2);
+        ctx.textAlign='right'; ctx.fillStyle='#fff';
+        ctx.font=`bold ${n>8?11:13}px -apple-system,sans-serif`;
+        ctx.shadowColor='rgba(0,0,0,0.3)'; ctx.shadowBlur=3;
+        const maxLen=n>10?6:10;
+        ctx.fillText(opt.length>maxLen?opt.slice(0,maxLen)+'…':opt, r-12, 5);
+        ctx.restore();
+      });
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+      ctx.strokeStyle='#fff'; ctx.lineWidth=4; ctx.stroke();
+    }
+
+    function spin() {
+      if (spinning||options.length<2) return;
+      spinning=true;
+      document.getElementById('spinBtn').disabled=true;
+      document.getElementById('resultBox').innerHTML=
+        `<span class="result-placeholder">${t('抽籤中...','Spinning...')}</span>`;
+      const extra=(Math.random()*360+1440)*(Math.PI/180);
+      const duration=4000+Math.random()*1000;
+      const startAngle=currentAngle, startTime=performance.now();
+      function easeOut(t){return 1-Math.pow(1-t,4);}
+      function frame(now){
+        const p=Math.min((now-startTime)/duration,1);
+        currentAngle=startAngle+extra*easeOut(p);
+        drawWheel(currentAngle);
+        if(p<1){requestAnimationFrame(frame);}
+        else{spinning=false;document.getElementById('spinBtn').disabled=false;showResult();}
+      }
+      requestAnimationFrame(frame);
+    }
+
+    function showResult() {
+      const n=options.length, slice=(Math.PI*2)/n;
+      const normalized=((-currentAngle)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
+      const idx=Math.floor(normalized/slice)%n;
+      const winner=options[idx], color=COLORS[idx%COLORS.length];
+      document.getElementById('resultBox').innerHTML=
+        `<span class="result-text" style="color:${color}">🎉 ${winner}</span>`;
+    }
+
+    function renderOptions() {
+      const list=document.getElementById('optionList');
+      if(options.length===0){
+        list.innerHTML=`<div class="empty-hint">${t('尚無選項，請新增','No options yet, add some')}</div>`;
+      } else {
+        list.innerHTML=options.map((opt,i)=>`
+          <div class="option-item">
+            <div class="option-dot" style="background:${COLORS[i%COLORS.length]}"></div>
+            <span class="option-label" title="${t('點擊編輯','Click to edit')}" onclick="startEdit(${i}, this)">${opt}</span>
+            <button class="del-btn" onclick="removeOption(${i})">✕</button>
+          </div>`).join('');
+      }
+      drawWheel(currentAngle);
+    }
+
+    function startEdit(i, el) {
+      const input = document.createElement('input');
+      input.value = options[i];
+      input.className = 'option-edit-input';
+      input.maxLength = 20;
+      el.replaceWith(input);
+      input.focus();
+      input.select();
+      function save() {
+        const val = input.value.trim();
+        if (val) options[i] = val;
+        renderOptions();
+      }
+      input.addEventListener('blur', save);
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { input.blur(); }
+        if (e.key === 'Escape') { options[i] = options[i]; renderOptions(); }
+      });
+    }
+
+    function addOption() {
+      const input=document.getElementById('addInput');
+      const val=input.value.trim();
+      if(!val) return;
+      if(options.length>=15){alert(t('最多 15 個選項','Max 15 options'));return;}
+      options.push(val); input.value=''; input.focus();
+      renderOptions();
+    }
+
+    function removeOption(i) {
+      if(options.length<=2){alert(t('至少需要 2 個選項','Need at least 2 options'));return;}
+      options.splice(i,1); renderOptions();
+    }
+
+    document.addEventListener('langchange', () => renderOptions());
+
+    renderOptions();
+  </script>
+
+</body>
+</html>

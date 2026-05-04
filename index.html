@@ -5,50 +5,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kit｜簡單好用的小工具集</title>
   <link rel="stylesheet" href="style.css">
+  <script src="lang.js"></script>
 </head>
 <body>
 
   <nav class="navbar">
     <div class="nav-inner">
       <a href="index.html" class="logo">⚙️ Kit</a>
+      <button id="lang-toggle" class="lang-toggle" onclick="toggleLang()">EN</button>
     </div>
   </nav>
 
   <section class="hero">
-    <span class="badge">免費使用</span>
-    <h1>簡單好用的<br><span class="accent">小工具集</span></h1>
-    <p>瀏覽器直接跑，不收集任何資料。</p>
+    <span class="badge" data-zh="免費使用" data-en="Free">免費使用</span>
+    <h1>
+      <span data-zh="簡單好用的" data-en="Simple &amp; Useful">簡單好用的</span><br>
+      <span class="accent" data-zh="小工具集" data-en="Toolkit">小工具集</span>
+    </h1>
+    <p data-zh="瀏覽器直接跑，不收集任何資料。" data-en="Runs in your browser. Zero data collected.">瀏覽器直接跑，不收集任何資料。</p>
   </section>
 
   <section class="tools-grid">
 
     <a href="tools/calculator.html" class="tool-card">
       <div class="tool-icon" style="background:#e8f5f0; color:#2da58e;">🧮</div>
-      <h2>計算機</h2>
-      <p>基本四則運算，支援鍵盤輸入，快速好用。</p>
-      <span class="tool-link">開始使用 →</span>
+      <h2 data-zh="計算機" data-en="Calculator">計算機</h2>
+      <p data-zh="基本四則運算，支援鍵盤輸入，快速好用。" data-en="Basic arithmetic with keyboard support. Fast and handy.">基本四則運算，支援鍵盤輸入，快速好用。</p>
+      <span class="tool-link" data-zh="開始使用 →" data-en="Get Started →">開始使用 →</span>
     </a>
 
     <a href="tools/timer.html" class="tool-card">
       <div class="tool-icon" style="background:#f0eefe; color:#7c6fe0;">⏱️</div>
-      <h2>計時器</h2>
-      <p>碼錶計次、倒數計時，時間到自動提示音。</p>
-      <span class="tool-link">開始使用 →</span>
+      <h2 data-zh="計時器" data-en="Timer">計時器</h2>
+      <p data-zh="碼錶計次、倒數計時，時間到自動提示音。" data-en="Stopwatch with laps and countdown with alert sound.">碼錶計次、倒數計時，時間到自動提示音。</p>
+      <span class="tool-link" data-zh="開始使用 →" data-en="Get Started →">開始使用 →</span>
     </a>
 
     <a href="tools/unit-converter.html" class="tool-card">
       <div class="tool-icon" style="background:#fff4e8; color:#e07c2a;">📏</div>
-      <h2>單位換算</h2>
-      <p>長度、重量、溫度、面積，快速互換單位。</p>
-      <span class="tool-link">開始使用 →</span>
+      <h2 data-zh="單位換算" data-en="Unit Converter">單位換算</h2>
+      <p data-zh="長度、重量、溫度、面積，快速互換單位。" data-en="Convert length, weight, temperature, and area instantly.">長度、重量、溫度、面積，快速互換單位。</p>
+      <span class="tool-link" data-zh="開始使用 →" data-en="Get Started →">開始使用 →</span>
+    </a>
+
+    <a href="tools/wheel.html" class="tool-card">
+      <div class="tool-icon" style="background:#fff0f0; color:#e05c5c;">🎡</div>
+      <h2 data-zh="隨機抽籤" data-en="Random Draw">隨機抽籤</h2>
+      <p data-zh="輸入選項，旋轉輪盤隨機抽出結果，最多 15 個選項。" data-en="Add options and spin the wheel for a random result. Up to 15 options.">輸入選項，旋轉輪盤隨機抽出結果，最多 15 個選項。</p>
+      <span class="tool-link" data-zh="開始使用 →" data-en="Get Started →">開始使用 →</span>
     </a>
 
   </section>
 
-  <div class="footer-note">更多工具持續開發中...</div>
+  <div class="footer-note" data-zh="更多工具持續開發中..." data-en="More tools coming soon...">更多工具持續開發中...</div>
 
   <footer>
-    <p>Kit · 簡單好用的小工具集</p>
+    <p data-zh="Kit · 簡單好用的小工具集" data-en="Kit · Simple & Useful Toolkit">Kit · 簡單好用的小工具集</p>
   </footer>
 
 </body>
